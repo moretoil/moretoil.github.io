@@ -1,0 +1,638 @@
+  <!DOCTYPE html>
+  <html lang="zh-CN"  
+      data-theme-mode="auto"
+  >
+  <head>
+  <meta charset="utf-8">
+  
+  
+  
+  <script>window.REIMU_CONFIG = {};window.REIMU_CONFIG.icon_font = '4552607_4k4bc36ef96';window.REIMU_CONFIG.clipboard_tips = {"success":{"zh-CN":"复制成功 (*^▽^*)"},"fail":{"zh-CN":"复制失败 (ﾟ⊿ﾟ)ﾂ"},"copyright":{"enable":false,"count":50,"license_type":"by-nc-sa"}};window.REIMU_CONFIG.clipboard_tips.copyright.content = '本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！';window.REIMU_CONFIG.code_block = {"expand":true};window.REIMU_CONFIG.base = 'https://moretoil.github.io';</script>
+  <title>
+    让 AI 画图脱离本地环境：我的轻量级解决方案 | Fox_dream の 小站
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin><link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap" media="print" onload="this.media&#x3D;&#39;all&#39;">
+    <link rel="preload" href="//at.alicdn.com/t/c/font_4552607_4k4bc36ef96.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    
+<link rel="stylesheet" href="../../../../css/loader.css">
+
+    <meta name="description" content="一、项目初衷 最近几个月，我一直在用 Stable Diffusion&#x2F;comfy ui 玩 AI 画图。一开始是自己搭 WebUI，装 Python、配 CUDA、下模型……过程挺折腾的。虽然最后能跑起来，但局限于我本人电脑配置仅为3050ti，能跑的模型基本屈指可数，生图效果实在欠佳。但实际上ai画图可以做到的事情远不止画图，其背后的各项模型SVD，SAM3D，SDpose，controlne">
+<meta property="og:type" content="article">
+<meta property="og:title" content="让 AI 画图脱离本地环境：我的轻量级解决方案">
+<meta property="og:url" content="https://moretoil.github.io/2025/12/10/%E8%AE%A9%20AI%20%E7%94%BB%E5%9B%BE%E8%84%B1%E7%A6%BB%E6%9C%AC%E5%9C%B0%E7%8E%AF%E5%A2%83%EF%BC%9A%E6%88%91%E7%9A%84%E8%BD%BB%E9%87%8F%E7%BA%A7%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/index.html">
+<meta property="og:site_name" content="Fox_dream の 小站">
+<meta property="og:description" content="一、项目初衷 最近几个月，我一直在用 Stable Diffusion&#x2F;comfy ui 玩 AI 画图。一开始是自己搭 WebUI，装 Python、配 CUDA、下模型……过程挺折腾的。虽然最后能跑起来，但局限于我本人电脑配置仅为3050ti，能跑的模型基本屈指可数，生图效果实在欠佳。但实际上ai画图可以做到的事情远不止画图，其背后的各项模型SVD，SAM3D，SDpose，controlne">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://moretoil.github.io/images/ai-drawing-solution/day-mode.png">
+<meta property="og:image" content="https://moretoil.github.io/images/ai-drawing-solution/night-mode.png">
+<meta property="og:image" content="https://moretoil.github.io/images/ai-drawing-solution/task-list.png">
+<meta property="og:image" content="https://moretoil.github.io/images/ai-drawing-solution/image-viewer.png">
+<meta property="og:image" content="https://moretoil.github.io/images/ai-drawing-solution/batch-save.png">
+<meta property="article:published_time" content="2025-12-10T07:46:28.912Z">
+<meta property="article:modified_time" content="2025-12-10T11:26:47.258Z">
+<meta property="article:author" content="Fox_dream">
+<meta property="article:tag" content="AIGC">
+<meta property="article:tag" content="AI画图">
+<meta property="article:tag" content="前端">
+<meta property="article:tag" content="应用">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://moretoil.github.io/images/ai-drawing-solution/day-mode.png">
+    <link rel="alternate" href="../../../../atom.xml" title="Fox_dream の 小站" type="application/atom+xml">
+    <link rel="shortcut icon" href="../../../../images/head.jpg">
+  
+<link rel="stylesheet" href="../../../../css/style.css">
+
+  <link rel="preload" as="style" onload="this.onload&#x3D;null;this.rel&#x3D;&#39;stylesheet&#39;" href="https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.css" integrity="sha384-IfxC36XL&#x2F;toUyJ939C73PcgMuRzAZuIzZxE38drsmO5p6jD7ei+Zx&#x2F;1oA&#x2F;0l8ysE" crossorigin="anonymous">
+    
+<script src="https://npm.webcache.cn/pace-js@1.2.4/pace.min.js" integrity="sha384-k6YtvFUEIuEFBdrLKJ3YAUbBki333tj1CSUisai5Cswsg9wcLNaPzsTHDswp4Az8" crossorigin="anonymous"></script>
+
+    
+<link rel="stylesheet" href="https://npm.webcache.cn/@reimujs/aos@0.1.2/dist/aos.css" integrity="sha384-GMRP93c6Hkz9JVKGAuRR3nTS7M07RwPgTFenXiosjq2VbVgvdDNcz1g6Mkj8AONa" crossorigin="anonymous">
+
+<meta name="generator" content="Hexo 8.0.0"></head>
+
+  <body>
+      <div id='loader'>
+    <div class="loading-left-bg loading-bg"></div>
+    <div class="loading-right-bg loading-bg"></div>
+    <div class="spinner-box">
+      <div class="loading-taichi rotate">
+          <svg width="150" height="150" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="https://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+            <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="var(--red-1, #ff5252)" />
+            <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z 
+           M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95z" fill="var(--red-1, #ff5252)" />
+          </svg>
+      </div>
+      <div class="loading-word">少女祈祷中...</div>
+    </div>
+  </div>
+  </div>
+  <script>
+    var time = null;
+    var loaderEl = document.getElementById('loader');
+    var startLoading = () => {
+      time = Date.now();
+      loaderEl.classList.remove("loading");
+    }
+    var hideLoader = () => {
+      document.body.style.overflow = 'auto';
+      loader.classList.add('loading');
+    };
+
+    var endLoading = () => {
+      if (!time) {
+        hideLoader();
+      } else {
+        if (Date.now() - time > 500) {
+          time = null;
+          hideLoader();
+        } else {
+          setTimeout(endLoading, 500 - (Date.now() - time));
+          time = null;
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', endLoading);
+    loaderEl.addEventListener('click', endLoading);
+  </script>
+<div id="copy-tooltip"></div>
+<div id="heatmap-tooltip"></div>
+
+
+    <div id="container">
+      <div id="wrap">
+        <div id="header-nav">
+  <nav id="main-nav" aria-label="Primary navigation">
+        <a class="main-nav-link-wrap" href="../../../../index.html">
+          <div class="main-nav-icon icon rotate">
+              &#xe62b;
+          </div>
+          <span class="main-nav-link">首页</span>
+        </span>
+        <a class="main-nav-link-wrap" href="../../../../archives">
+          <div class="main-nav-icon icon rotate">
+              &#xe62b;
+          </div>
+          <span class="main-nav-link">归档</span>
+        </span>
+        <a class="main-nav-link-wrap" href="../../../../about">
+          <div class="main-nav-icon icon rotate">
+              &#xe62b;
+          </div>
+          <span class="main-nav-link">关于</span>
+        </span>
+        <a class="main-nav-link-wrap" href="../../../../links">
+          <div class="main-nav-icon icon rotate">
+              &#xe62b;
+          </div>
+          <span class="main-nav-link">友链</span>
+        </span>
+    <a id="main-nav-toggle" class="nav-icon" aria-label="Toggle navigation" role="button"></a>
+  </nav>
+  <nav id="sub-nav" aria-label="Secondary navigation">
+      <a id="nav-rss-link" class="nav-icon" href="../../../../atom.xml" title="RSS 订阅" aria-label="RSS 订阅" target="_blank"></a>
+  </nav>
+</div>
+<header id="header" aria-label="Site header">
+        <picture>
+        </picture>
+          <img  fetchpriority="high" src="/images/banner.webp" alt="让 AI 画图脱离本地环境：我的轻量级解决方案">
+  <div id="header-outer">
+    <div id="header-title">
+          <span id="logo">
+            <h1 data-aos="slide-up">让 AI 画图脱离本地环境：我的轻量级解决方案</h1>
+          </span>
+        <h2 id="subtitle-wrap" data-aos="slide-down">
+        </h2>
+    </div>
+  </div>
+</header>
+
+        <div id="content" aria-label="Page content"  class="sidebar-right" >
+          <aside id="sidebar" aria-label="Sidebar">
+  <div class="sidebar-wrapper-container sticky">
+  <div class="sidebar-wrapper">
+    <div class="sidebar-wrap" data-aos="fade-up">
+          <div class="sidebar-toc-sidebar"><h3 class="toc-title">文章目录</h3>
+<div class="sidebar-toc-wrapper toc-div-class" >
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#font-style-color-rgb-17-17-51-%E4%B8%80%E3%80%81%E9%A1%B9%E7%9B%AE%E5%88%9D%E8%A1%B7-font"><span class="toc-number">1.</span> <span class="toc-text">一、项目初衷</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%92%88%E5%AF%B9%E7%97%9B%E7%82%B9"><span class="toc-number">2.</span> <span class="toc-text">二、针对痛点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91%E5%87%86%E5%A4%87"><span class="toc-number">3.</span> <span class="toc-text">三、项目开发准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E9%A1%B9%E7%9B%AE%E6%8A%80%E6%9C%AF"><span class="toc-number">4.</span> <span class="toc-text">四、项目技术</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Pydantic%E5%92%8CSQLAlchemy%E7%94%A8%E9%80%94%E8%AF%B4%E6%98%8E"><span class="toc-number">5.</span> <span class="toc-text">Pydantic和SQLAlchemy用途说明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%9F%BA%E7%A1%80%E5%B1%95%E7%A4%BA"><span class="toc-number">6.</span> <span class="toc-text">五、基础展示</span></a></li></ol>
+</div>
+</div>
+          <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/head.jpg" data-sizes="auto" alt="Fox_dream" class="lazyload">
+  <div class="sidebar-author-name">Fox_dream</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>文章</div>
+    <div class="sidebar-state-number">4</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>分类</div>
+    <div class="sidebar-state-number">4</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>标签</div>
+    <div class="sidebar-state-number">7</div>
+  </div>
+</div>
+<div class="sidebar-social">
+</div>
+<div class="sidebar-menu">
+      <div class="sidebar-menu-link-wrap">
+        <a class="sidebar-menu-link-dummy" href="/" aria-label="首页"></a>
+        <div class="sidebar-menu-icon icon rotate">
+            &#xe62b;
+        </div>
+        <div class="sidebar-menu-link">首页</div>
+      </div>
+      <div class="sidebar-menu-link-wrap">
+        <a class="sidebar-menu-link-dummy" href="/archives" aria-label="归档"></a>
+        <div class="sidebar-menu-icon icon rotate">
+            &#xe62b;
+        </div>
+        <div class="sidebar-menu-link">归档</div>
+      </div>
+      <div class="sidebar-menu-link-wrap">
+        <a class="sidebar-menu-link-dummy" href="/about" aria-label="关于"></a>
+        <div class="sidebar-menu-icon icon rotate">
+            &#xe62b;
+        </div>
+        <div class="sidebar-menu-link">关于</div>
+      </div>
+      <div class="sidebar-menu-link-wrap">
+        <a class="sidebar-menu-link-dummy" href="/links" aria-label="友链"></a>
+        <div class="sidebar-menu-icon icon rotate">
+            &#xe62b;
+        </div>
+        <div class="sidebar-menu-link">友链</div>
+      </div>
+</div>
+</div>
+          <div class="sidebar-btn-wrapper" style="position:static">
+            <div class="sidebar-toc-btn current"></div>
+            <div class="sidebar-common-btn"></div>
+          </div>
+    </div>
+  </div>
+  <div class="sidebar-widget">
+  </div>
+  </div>
+</aside>
+
+          <section id="main" aria-label="Main content"><article id="post-让 AI 画图脱离本地环境：我的轻量级解决方案" class="h-entry article" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-inner" data-aos="fade-up">
+    <div class="article-meta">
+      <div class="article-date">
+  <span class="article-date-link icon-calendar" data-aos="zoom-in">
+    <time datetime="2025-12-10T07:46:28.912Z" itemprop="datePublished">2025-12-10</time>
+    <time style="display: none;" id="post-update-time">2025-12-10</time>
+  </span>
+</div>
+
+        <div class="article-category">
+    <a class="article-category-link" href="../../../../categories/%E6%91%B8%E9%B1%BC/" title="摸鱼">摸鱼</a>
+  </div>
+
+    </div>
+    
+    <div class="hr-line"></div>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+        <h3 id="font-style-color-rgb-17-17-51-一、项目初衷-font"><font style="color:rgb(17, 17, 51);">一、项目初衷</font></h3>
+<p><font style="color:rgb(17, 17, 51);">最近几个月，我一直在用 Stable Diffusion/comfy ui 玩 AI 画图。一开始是自己搭 WebUI，装 Python、配 CUDA、下模型……过程挺折腾的。虽然最后能跑起来，但局限于我本人电脑配置仅为3050ti，能跑的模型基本屈指可数，生图效果实在欠佳。但实际上ai画图可以做到的事情远不止画图，其背后的各项模型SVD，SAM3D，SDpose，controlnet等等完全可以延申至其他行业的各个方向，如果说个人开发者因为设备问题而限制了开发的想象，我觉得是个蛮可惜的一件事。</font></p>
+<h3 id="二、针对痛点">二、针对痛点</h3>
+<p>传统ai画图本地部署。</p>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>具体表现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>环境依赖复杂</strong></td>
+<td>需要特定版本的 Python、PyTorch、CUDA 驱动；Windows 和 macOS 安装体验差异大</td>
+</tr>
+<tr>
+<td><strong>显存门槛高</strong></td>
+<td>即使是 512x512 图像，也需要 ≥6GB 显存；sdxl 模型基本要求 8GB+</td>
+</tr>
+<tr>
+<td><strong>模型管理混乱</strong></td>
+<td><code>.ckpt</code> / <code>.safetensors</code> 文件动辄几个 GB，下载慢、占空间、版本难管理</td>
+</tr>
+<tr>
+<td><strong>启动慢、资源占用高</strong></td>
+<td>每次启动 WebUI 要加载模型到显存，关机就释放，无法“随用随走”</td>
+</tr>
+<tr>
+<td><strong>难以集成到其他项目</strong></td>
+<td>如果你想在自己的 App 里加个“AI 生成”按钮，很难把 WebUI 当成服务调用</td>
+</tr>
+</tbody>
+</table>
+<p>云端ai画图部署痛点</p>
+<ol>
+<li><strong><font style="color:rgb(17, 17, 51);">成本高</font></strong><font style="color:rgb(17, 17, 51);">：A10G 实例按小时计费，即使空闲也在烧钱。</font></li>
+<li><strong><font style="color:rgb(17, 17, 51);">运维复杂</font></strong><font style="color:rgb(17, 17, 51);">：要处理并发、队列、超时、OOM、日志、监控……</font></li>
+<li><strong><font style="color:rgb(17, 17, 51);">冷启动延迟</font></strong><font style="color:rgb(17, 17, 51);">：模型没加载时，首次请求可能要等 30 秒+</font></li>
+<li><strong><font style="color:rgb(17, 17, 51);">安全风险</font></strong><font style="color:rgb(17, 17, 51);">：暴露公网 API 需要考虑鉴权、防刷、DDoS</font></li>
+</ol>
+<h3 id="三、项目开发准备">三、项目开发准备</h3>
+<p><font style="color:rgb(17, 17, 51);">使用 </font><strong><font style="color:rgb(17, 17, 51);">RunningHub 关联api</font></strong><font style="color:rgb(17, 17, 51);">，原因如下：</font></p>
+<ol>
+<li><strong><font style="color:rgb(17, 17, 51);">原生支持comfy ui 工作流</font></strong></li>
+<li><strong><font style="color:rgb(17, 17, 51);">有稳定 RESTful API</font></strong></li>
+<li><strong><font style="color:rgb(17, 17, 51);">国内访问速度尚可</font></strong></li>
+<li><strong><font style="color:rgb(17, 17, 51);">模型库完善</font></strong></li>
+</ol>
+<h3 id="四、项目技术">四、项目技术</h3>
+<ul>
+<li><strong>前端</strong>：Vue 3 + TypeScript + Vite + Pinia</li>
+<li><strong>后端</strong>：Python + FastAPI + Pydantic（数据验证）+ SQLAlchemy（数据库ORM）</li>
+<li><strong>本地应用转换</strong>：PywebView</li>
+</ul>
+<p>可能有人会比较疑惑，为什么要使用pywebview，实际上是因为最近看了pywebview的相关内容，觉得满有意思，看着比electron好玩，想写写练练手。</p>
+<h3 id="Pydantic和SQLAlchemy用途说明">Pydantic和SQLAlchemy用途说明</h3>
+<ul>
+<li><strong>Pydantic</strong>：
+<ul>
+<li>数据验证：自动验证API请求和响应的数据格式</li>
+<li>类型检查：确保数据符合预定义的类型</li>
+<li>序列化/反序列化：JSON与Python对象转换</li>
+<li>配置管理：处理应用配置和环境变量</li>
+</ul>
+</li>
+<li><strong>SQLAlchemy</strong>：
+<ul>
+<li>数据库操作：支持多种数据库（SQLite、PostgreSQL、MySQL等）</li>
+<li>ORM映射：Python类与数据库表映射</li>
+<li>查询构建：Python风格的数据库查询</li>
+<li>迁移管理：数据库结构变更管理</li>
+</ul>
+</li>
+</ul>
+<p>同时在前端的构建上面，也使用了Gemini进行快速构建，不得不说，效率真快，还高效支持夜间模式</p>
+<h3 id="五、基础展示">五、基础展示</h3>
+<ul>
+<li>日间模式</li>
+</ul>
+<p><img src="/images/ai-drawing-solution/day-mode.png" alt=""></p>
+<ul>
+<li>夜间模式</li>
+</ul>
+<p><img src="/images/ai-drawing-solution/night-mode.png" alt=""></p>
+<p>基础功能：</p>
+<p><strong>四大生成模式，满足所有需求</strong></p>
+<p><strong>图像模块</strong></p>
+<ul>
+<li><strong>文生图 (Text2Img)</strong>：输入文字描述，AI为你创造全新图像</li>
+<li><strong>图生图 (Img2Img)</strong>：上传参考图片，AI基于原图重新创作</li>
+<li><strong>批量文生图</strong>：一次设置，批量生成多种变体</li>
+<li><strong>批量图生图</strong>：基于同一参考，产出系列化作品</li>
+</ul>
+<p><strong>视频模块</strong></p>
+<ul>
+<li>**文生视频：**输入文字描述，AI为你创造全新视频</li>
+<li>**图生视频：**上传参考图片，AI基于原图创作</li>
+<li>**首尾帧：**输入首尾帧，补全中间视频</li>
+</ul>
+<p><strong>改图模块</strong></p>
+<ul>
+<li>**集成Nano Banana：**输入文字描述，AI为你创造</li>
+</ul>
+<p><strong>工作流识别模块</strong></p>
+<ul>
+<li>**集成Runninghub工作流识别：**可高效复用runninghub现有方案。</li>
+</ul>
+<p><strong>生图展示</strong></p>
+<ul>
+<li>多并发任务列表</li>
+</ul>
+<blockquote>
+<p><img src="/images/ai-drawing-solution/task-list.png" alt=""></p>
+</blockquote>
+<ul>
+<li>v-viewer图片查看器集成</li>
+</ul>
+<p><img src="/images/ai-drawing-solution/image-viewer.png" alt=""></p>
+<ul>
+<li>批量图片保存到本地</li>
+</ul>
+<p><img src="/images/ai-drawing-solution/batch-save.png" alt=""></p>
+
+    </div>
+    <footer class="article-footer">
+        <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="../../../../tags/AIGC/" rel="tag" title="AIGC">AIGC</a></li><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="../../../../tags/AI%E7%94%BB%E5%9B%BE/" rel="tag" title="AI画图">AI画图</a></li><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="../../../../tags/%E5%89%8D%E7%AB%AF/" rel="tag" title="前端">前端</a></li><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="../../../../tags/%E5%BA%94%E7%94%A8/" rel="tag" title="应用">应用</a></li></ul>
+
+    </footer>
+  </div>
+    <nav id="article-nav" aria-label="Article navigation" data-aos="fade-up">
+      <div class="article-nav-link-wrap left">
+            <img data-src="/images/banner.webp" data-sizes="auto" alt="构建 ComfyUI 智能体：用大模型帮你自动设计 AI 绘图工作流" class="lazyload">
+        <a href="/2026/01/30/%E6%9E%84%E5%BB%BA%20ComfyUI%20%E6%99%BA%E8%83%BD%E4%BD%93%EF%BC%9A%E7%94%A8%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%B8%AE%E4%BD%A0%E8%87%AA%E5%8A%A8%E8%AE%BE%E8%AE%A1%20AI%20%E7%BB%98%E5%9B%BE%E5%B7%A5%E4%BD%9C%E6%B5%81/" aria-label="前一篇: 构建 ComfyUI 智能体：用大模型帮你自动设计 AI 绘图工作流" title="前一篇: 构建 ComfyUI 智能体：用大模型帮你自动设计 AI 绘图工作流"></a>
+        <div class="article-nav-caption">前一篇</div>
+        <h3 class="article-nav-title">
+            构建 ComfyUI 智能体：用大模型帮你自动设计 AI 绘图工作流
+        </h3>
+      </div>
+    <div class="article-nav-link-wrap right">
+          <img data-src="/images/banner.webp" data-sizes="auto" alt="测试自动化部署修复" class="lazyload">
+      <a href="/2025/12/06/%E6%B5%8B%E8%AF%95%E8%87%AA%E5%8A%A8%E5%8C%96%E9%83%A8%E7%BD%B2%E4%BF%AE%E5%A4%8D/" aria-label="后一篇: 测试自动化部署修复"  title="后一篇: 测试自动化部署修复"></a>
+      <div class="article-nav-caption">后一篇</div>
+      <h3 class="article-nav-title">
+          测试自动化部署修复
+      </h3>
+    </div>
+  </nav>
+
+</article>
+
+
+</section>
+        </div>
+        <footer id="footer" aria-label="Site footer">
+  <div style="width: 100%; overflow: hidden">
+    <div class="footer-line"></div>
+  </div>
+  <div id="footer-info">
+    <div>
+      <span class="icon-copyright"></span>
+        2020-2026
+      <span class="footer-info-sep rotate"></span>
+      Fox_dream
+    </div>
+      <div>
+        基于&nbsp;<a href="https://hexo.io/" rel="noopener nofollow noreferrer" target="_blank">Hexo</a>&nbsp;
+        Theme.<a href="https://github.com/D-Sketon/hexo-theme-reimu" rel="noopener nofollow noreferrer" target="_blank">Reimu</a>
+      </div>
+      <div>
+        <span class="icon-brush"></span>
+        2.8k
+        &nbsp;|&nbsp;
+        <span class="icon-coffee"></span>
+        00:12
+      </div>
+      <div>
+        <span class="icon-eye"></span>
+        <span id="busuanzi_container_site_pv">总访问量&nbsp;<span id="busuanzi_value_site_pv"></span></span>
+        &nbsp;|&nbsp;
+        <span class="icon-user"></span>
+        <span id="busuanzi_container_site_uv">总访客量&nbsp;<span id="busuanzi_value_site_uv"></span></span>
+      </div>
+  </div>
+</footer>
+
+          <div class="sidebar-top">
+            <div class="sidebar-top-taichi rotate"></div>
+            <div class="arrow-up"></div>
+          </div>
+        <div id="mask" class="hide"></div>
+      </div>
+      <nav id="mobile-nav" aria-label="Mobile navigation">
+  <div class="sidebar-wrap">
+        <div class="sidebar-toc-sidebar"><h3 class="toc-title">文章目录</h3>
+<div class="sidebar-toc-wrapper toc-div-class" >
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#font-style-color-rgb-17-17-51-%E4%B8%80%E3%80%81%E9%A1%B9%E7%9B%AE%E5%88%9D%E8%A1%B7-font"><span class="toc-number">1.</span> <span class="toc-text">一、项目初衷</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%92%88%E5%AF%B9%E7%97%9B%E7%82%B9"><span class="toc-number">2.</span> <span class="toc-text">二、针对痛点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91%E5%87%86%E5%A4%87"><span class="toc-number">3.</span> <span class="toc-text">三、项目开发准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E9%A1%B9%E7%9B%AE%E6%8A%80%E6%9C%AF"><span class="toc-number">4.</span> <span class="toc-text">四、项目技术</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Pydantic%E5%92%8CSQLAlchemy%E7%94%A8%E9%80%94%E8%AF%B4%E6%98%8E"><span class="toc-number">5.</span> <span class="toc-text">Pydantic和SQLAlchemy用途说明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%9F%BA%E7%A1%80%E5%B1%95%E7%A4%BA"><span class="toc-number">6.</span> <span class="toc-text">五、基础展示</span></a></li></ol>
+</div>
+</div>
+        <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/head.jpg" data-sizes="auto" alt="Fox_dream" class="lazyload">
+  <div class="sidebar-author-name">Fox_dream</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>文章</div>
+    <div class="sidebar-state-number">4</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>分类</div>
+    <div class="sidebar-state-number">4</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>标签</div>
+    <div class="sidebar-state-number">7</div>
+  </div>
+</div>
+<div class="sidebar-social">
+</div>
+<div class="sidebar-menu">
+      <div class="sidebar-menu-link-wrap">
+        <a class="sidebar-menu-link-dummy" href="/" aria-label="首页"></a>
+        <div class="sidebar-menu-icon icon rotate">
+            &#xe62b;
+        </div>
+        <div class="sidebar-menu-link">首页</div>
+      </div>
+      <div class="sidebar-menu-link-wrap">
+        <a class="sidebar-menu-link-dummy" href="/archives" aria-label="归档"></a>
+        <div class="sidebar-menu-icon icon rotate">
+            &#xe62b;
+        </div>
+        <div class="sidebar-menu-link">归档</div>
+      </div>
+      <div class="sidebar-menu-link-wrap">
+        <a class="sidebar-menu-link-dummy" href="/about" aria-label="关于"></a>
+        <div class="sidebar-menu-icon icon rotate">
+            &#xe62b;
+        </div>
+        <div class="sidebar-menu-link">关于</div>
+      </div>
+      <div class="sidebar-menu-link-wrap">
+        <a class="sidebar-menu-link-dummy" href="/links" aria-label="友链"></a>
+        <div class="sidebar-menu-icon icon rotate">
+            &#xe62b;
+        </div>
+        <div class="sidebar-menu-link">友链</div>
+      </div>
+</div>
+</div>
+  </div>
+      <div class="sidebar-btn-wrapper">
+        <div class="sidebar-toc-btn current"></div>
+        <div class="sidebar-common-btn"></div>
+      </div>
+</nav>
+
+    </div>
+    
+<script src="https://npm.webcache.cn/lazysizes@5.3.2/lazysizes.min.js" integrity="sha384-3gT&#x2F;vsepWkfz&#x2F;ff7PpWNUeMzeWoH3cDhm&#x2F;A8jM7ouoAK0&#x2F;fP&#x2F;9bcHHR5kHq2nf+e" crossorigin="anonymous"></script>
+
+
+<script src="https://npm.webcache.cn/clipboard@2.0.11/dist/clipboard.min.js" integrity="sha384-J08i8An&#x2F;QeARD9ExYpvphB8BsyOj3Gh2TSh1aLINKO3L0cMSH2dN3E22zFoXEi0Q" crossorigin="anonymous"></script>
+
+
+
+
+<script src="../../../../js/script.js"></script>
+
+
+  
+<script src="../../../../js/aos.js"></script>
+
+  <script>
+    var aosInit = () => {
+      AOS.init({
+        duration: 1000,
+        easing: "ease",
+        once: true,
+        offset: 50,
+      });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', aosInit);
+    } else {
+      aosInit();
+    }
+  </script>
+
+
+<script src="../../../../js/pjax_script.js" data-pjax></script>
+
+
+
+
+  
+<script src="https://npm.webcache.cn/mouse-firework@0.1.1/dist/index.umd.js" integrity="sha384-8LyaidD9GPxQQgLJO&#x2F;WRw&#x2F;O2h3BoNq&#x2F;ApI&#x2F;ecpvM6RsrCz2qP2ppBXUKihP4V&#x2F;2d" crossorigin="anonymous"></script>
+
+  <script>
+    if (!false || !window.matchMedia('(max-width: 768px)').matches) {
+      window.firework && window.firework(JSON.parse('{"excludeElements":["a","button"],"particles":[{"shape":"circle","move":["emit"],"easing":"easeOutExpo","colors":["var(--red-1)","var(--red-2)","var(--red-3)","var(--red-4)"],"number":20,"duration":[1200,1800],"shapeOptions":{"radius":[16,32],"alpha":[0.3,0.5]}},{"shape":"circle","move":["diffuse"],"easing":"easeOutExpo","colors":["var(--red-0)"],"number":1,"duration":[1200,1800],"shapeOptions":{"radius":20,"alpha":[0.2,0.5],"lineWidth":6}}]}'));
+    }
+  </script>
+
+
+
+
+
+<div id="lazy-script">
+  <div>
+      
+      
+      <script data-pjax>
+        window.REIMU_POST = {
+          author: "Fox_dream",
+          title: "让 AI 画图脱离本地环境：我的轻量级解决方案",
+          url: "https://moretoil.github.io/2025/12/10/%E8%AE%A9%20AI%20%E7%94%BB%E5%9B%BE%E8%84%B1%E7%A6%BB%E6%9C%AC%E5%9C%B0%E7%8E%AF%E5%A2%83%EF%BC%9A%E6%88%91%E7%9A%84%E8%BD%BB%E9%87%8F%E7%BA%A7%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/",
+          excerpt: "",
+          description: "",
+          stripContent: "一、项目初衷 最近几个月，我一直在用 Stable Diffusion/comfy ui 玩 AI 画图。一开始是自己搭 WebUI，装 Python、配 CUDA、下模型……过程挺折腾的。虽然最后能跑起来，但局限于我本人电脑配置仅为3050ti，能跑的模型基本屈指可数，生图效果实在欠佳。但实际上ai画图可以做到的事情远不止画图，其背后的各项模型SVD，SAM3D，SDpose，controlnet等等完全可以延申至其他行业的各个方向，如果说个人开发者因为设备问题而限制了开发的想象，我觉得是个蛮",
+          date: "Wed Dec 10 2025 07:46:28 GMT+0000",
+          updated: "Wed Dec 10 2025 11:26:47 GMT+0000",
+          cover: "/images/banner.webp",
+        };
+      </script>
+        
+<script src="../../../../js/insert_highlight.js" data-pjax></script>
+
+        
+<script src="../../../../js/tabs.js" data-pjax></script>
+
+      <script type="module" data-pjax>
+        const PhotoSwipeLightbox = (await safeImport("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js", "sha384-DiL6M/gG+wmTxmCRZyD1zee6lIhawn5TGvED0FOh7fXcN9B0aZ9dexSF/N6lrZi/")).default;
+        const initPswp = (gallery, children) => {
+          if (_$$(`${gallery} ${children}`).length > 0) {
+            new PhotoSwipeLightbox({
+              gallery,
+              children,
+              pswpModule: () => safeImport("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js", "sha384-WkkO3GCmgkC3VQWpaV8DqhKJqpzpF9JoByxDmnV8+oTJ7m3DfYEWX1fu1scuS4+s")
+            }).init();
+          }
+        }
+        const pswp = () => {
+          initPswp('.article-entry', 'a.article-gallery-item');
+          initPswp('.article-gallery', 'a.article-gallery-item');
+          window.lightboxStatus = 'done';
+          window.removeEventListener('lightbox:ready', pswp);
+        }
+        if(window.lightboxStatus === 'ready') {
+          pswp()
+        } else {
+          window.addEventListener('lightbox:ready', pswp);
+        }
+      </script>
+        
+
+  </div>
+</div>
+
+
+  <script>
+    console.log(String.raw`%c 
+ ______     ______     __     __    __     __  __    
+/\  == \   /\  ___\   /\ \   /\ "-./  \   /\ \/\ \   
+\ \  __<   \ \  __\   \ \ \  \ \ \-./\ \  \ \ \_\ \  
+ \ \_\ \_\  \ \_____\  \ \_\  \ \_\ \ \_\  \ \_____\ 
+  \/_/ /_/   \/_____/   \/_/   \/_/  \/_/   \/_____/ 
+                                                  
+`,'color: #ff5252;')
+    console.log('%c Theme.Reimu v' + '1.11.1' + ' %c https://github.com/D-Sketon/hexo-theme-reimu ', 'color: white; background: #ff5252; padding:5px 0;', 'padding:4px;border:1px solid #ff5252;')
+  </script>
+  
+
+
+  
+<script src="https://npm.webcache.cn/busuanzi@2.3.0/bsz.pure.mini.js" integrity="sha384-0M75wtSkhjIInv4coYlaJU83+OypaRCIq2SukQVQX04eGTCBXJDuWAbJet56id+S" crossorigin="anonymous" async></script>
+
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+</script>
+
+
+
+
+
+  </body>
+  </html>
